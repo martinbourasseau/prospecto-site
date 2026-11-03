@@ -106,8 +106,8 @@ export default function Hero() {
             <h1 id="hero-title" className="hero-title display">
               <span className="hero-eyebrow intro" style={{ ["--d" as string]: "0.3s" }}>
                 Intelligence artificielle · Prospection commerciale
-              </span>
-              <span className="line intro" style={{ ["--d" as string]: "0.42s" }}>La prospection change.</span>
+              </span>{" "}
+              <span className="line intro" style={{ ["--d" as string]: "0.42s" }}>La prospection change.</span>{" "}
               <span className="line intro text-[var(--silver)]" style={{ ["--d" as string]: "0.54s" }}>
                 Votre croissance aussi.
               </span>
