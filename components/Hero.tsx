@@ -109,7 +109,7 @@ export default function Hero() {
       <div className="hero-copy wrap flex min-h-[max(100svh,720px)] flex-col justify-end pb-[clamp(28px,6vh,64px)] pt-[44svh] md:pt-[50svh]">
 
 
-        <div className="grid items-end gap-7 md:grid-cols-[1.55fr_1fr] md:gap-12">
+        <div className="grid items-end gap-7 md:grid-cols-[1.75fr_1fr] md:gap-12">
           <div>
             <h1 id="hero-title" className="hero-title display">
               <span className="hero-eyebrow intro" style={{ ["--d" as string]: "0.3s" }}>
