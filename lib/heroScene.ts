@@ -470,6 +470,12 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
 
   // Qualité adaptative : si l'appareil peine, on réduit la résolution de rendu.
   function adapt(now: number) {
+    // Une fenêtre en arrière-plan est ralentie par le navigateur : ces mesures ne disent rien de l'appareil.
+    if (!document.hasFocus()) {
+      last = now;
+      deltas.length = 0;
+      return;
+    }
     deltas.push(now - last);
     last = now;
     if (deltas.length < 20) return;
