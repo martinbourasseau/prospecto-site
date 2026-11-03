@@ -7,6 +7,8 @@ import { P_INNER, P_OUTER, type Cmd } from "./pShape";
 export type HeroSceneOptions = {
   reducedMotion: boolean;
   onReady?: () => void;
+  /** Appelé si l'appareil ne parvient pas à afficher la scène de façon fluide. */
+  onTooSlow?: () => void;
 };
 
 export type HeroScene = {
@@ -214,14 +216,14 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
     alpha: false,
     powerPreference: "high-performance",
   });
-  const dpr = Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 1.75);
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
   let quality = dpr;
   renderer.setPixelRatio(dpr);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.localClippingEnabled = true;
-  renderer.transmissionResolutionScale = mobile ? 0.5 : 0.75;
+  renderer.transmissionResolutionScale = mobile ? 0.35 : 0.5;
   renderer.setClearColor(0x03050a, 1);
   renderer.domElement.setAttribute("aria-hidden", "true");
   renderer.domElement.className = "hero-canvas";
@@ -236,13 +238,25 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
   const lookAt = new THREE.Vector3(0, -0.15, 0);
 
-  // Fond lumineux
+  // Fond lumineux : la lumière liquide est calculée une fois par image dans une petite texture
+  // (elle est floue par nature), puis réutilisée par le rendu principal, la réfraction et le reflet.
+  const liquidRT = new THREE.WebGLRenderTarget(mobile ? 256 : 384, mobile ? 128 : 192, {
+    type: THREE.HalfFloatType,
+    depthBuffer: false,
+  });
   const backdropMat = new THREE.ShaderMaterial({
     ...backdropShader,
     uniforms: THREE.UniformsUtils.clone(backdropShader.uniforms),
     depthWrite: false,
+    depthTest: false,
   });
-  const backdrop = new THREE.Mesh(new THREE.PlaneGeometry(90, 45), backdropMat);
+  const liquidScene = new THREE.Scene();
+  const liquidCam = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 1);
+  liquidScene.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), backdropMat));
+  const backdrop = new THREE.Mesh(
+    new THREE.PlaneGeometry(90, 45),
+    new THREE.MeshBasicMaterial({ map: liquidRT.texture, depthWrite: false }),
+  );
   backdrop.position.set(0, 2.2, -9);
   scene.add(backdrop);
 
@@ -255,7 +269,6 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
     transmission: 1,
     thickness: 0.9,
     ior: 1.48,
-    dispersion: mobile ? 0 : 3.2,
     iridescence: 0.4,
     iridescenceIOR: 1.25,
     clearcoat: 1,
@@ -284,7 +297,7 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
   };
 
   const pGroup = new THREE.Group();
-  const pMesh = new THREE.Mesh(buildPGeometry(mobile), pMat);
+  const pMesh = new THREE.Mesh<THREE.BufferGeometry, THREE.Material>(buildPGeometry(mobile), pMat);
   pGroup.add(pMesh);
   scene.add(pGroup);
 
@@ -328,15 +341,33 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
 
   // Eau
   const waterGeo = new THREE.PlaneGeometry(140, 90);
-  const reflScale = mobile ? 0.45 : 0.75;
+  const reflScale = mobile ? 0.3 : 0.4;
   const water = new Reflector(waterGeo, {
     clipBias: 0.003,
     textureWidth: Math.round(window.innerWidth * dpr * reflScale),
     textureHeight: Math.round(window.innerHeight * dpr * reflScale),
     color: new THREE.Color(0x8899aa),
-    multisample: mobile ? 0 : 4,
+    multisample: 0,
     shader: waterShader,
   });
+  // Dans le reflet (flou), un verre simplifié suffit : on évite une seconde passe de réfraction.
+  const reflMat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color("#c9d6ee"),
+    roughness: 0.15,
+    metalness: 0.2,
+    transparent: true,
+    opacity: 0.5,
+    emissive: new THREE.Color("#2a3a5c"),
+    clippingPlanes: [clip],
+  });
+  const reflectorRender = water.onBeforeRender;
+  water.onBeforeRender = function (...args: Parameters<typeof reflectorRender>) {
+    pMesh.material = reflMat;
+    particles.visible = false;
+    reflectorRender.apply(this, args);
+    pMesh.material = pMat;
+    particles.visible = true;
+  };
   water.rotation.x = -Math.PI / 2;
   water.position.y = WATER_Y;
   scene.add(water);
@@ -431,6 +462,9 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
     pGroup.position.y = opts.reducedMotion ? 0 : Math.sin(t * 0.6) * 0.03;
     scan.position.y = clip.constant - pGroup.position.y;
 
+    renderer.setRenderTarget(liquidRT);
+    renderer.render(liquidScene, liquidCam);
+    renderer.setRenderTarget(null);
     renderer.render(scene, camera);
   }
 
@@ -438,14 +472,18 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
   function adapt(now: number) {
     deltas.push(now - last);
     last = now;
-    if (deltas.length < 45) return;
+    if (deltas.length < 20) return;
     const sorted = [...deltas].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)];
     deltas.length = 0;
-    if (median > 40 && quality > 0.75) {
-      quality = Math.max(0.75, quality - 0.5);
+    if (median <= 34) return;
+    if (quality > 0.6) {
+      quality = Math.max(0.6, quality - 0.25);
       renderer.setPixelRatio(quality);
       resize();
+    } else if (median > 60) {
+      // Même à basse résolution, l'appareil n'y arrive pas : on bascule sur le P vectoriel.
+      opts.onTooSlow?.();
     }
   }
 
@@ -509,6 +547,8 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
   }
 
   apply();
+  // La chorégraphie suit le temps réel, même si quelques images sont lentes.
+  gsap.ticker.lagSmoothing(0);
   tl = gsap.timeline({ onUpdate: apply, defaults: { ease: "power2.out" } });
   tl.to(state, { back: 1, water: 1, duration: 1.8, ease: "power1.inOut" }, 0)
     .to(state, { part: 1, duration: 1.6 }, 0.35)
@@ -536,8 +576,12 @@ export function createHeroScene(container: HTMLElement, opts: HeroSceneOptions):
       if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
       else mat?.dispose?.();
     });
+    liquidScene.traverse((o) => (o as THREE.Mesh).geometry?.dispose?.());
+    backdropMat.dispose();
+    reflMat.dispose();
     water.dispose();
     envTex.dispose();
+    liquidRT.dispose();
     pmrem.dispose();
     renderer.dispose();
     renderer.domElement.remove();

@@ -56,7 +56,14 @@ export default function Hero() {
       try {
         const { createHeroScene } = await import("@/lib/heroScene");
         if (destroyed) return;
-        const s = createHeroScene(el, { reducedMotion });
+        const s = createHeroScene(el, {
+          reducedMotion,
+          onTooSlow: () => {
+            s.destroy();
+            destroy = undefined;
+            setMode("fallback");
+          },
+        });
         destroy = s.destroy;
         setMode("webgl");
       } catch {
