@@ -45,25 +45,24 @@ export default function Contact() {
             Et si nous faisions évoluer votre activité&nbsp;?
           </h2>
           <p className="lede mx-auto mt-8" data-reveal="0.1">
-            Vous avez un projet de site web, une idée d&apos;agent IA ou souhaitez automatiser certaines tâches de
-            votre entreprise&nbsp;? Échangeons sur vos besoins et imaginons une solution adaptée.
+            Site web, agent IA, automatisation : <span className="text-[var(--light)]">parlons de votre projet.</span>
           </p>
         </div>
 
         <div className="glass glass-strong mx-auto mt-14 max-w-4xl rounded-[var(--radius-xl)] p-6 text-center sm:p-12" data-reveal="0.15" data-glow>
           <p className="text-[0.9rem] text-[var(--text-dim)]">Écrivez-nous directement</p>
-          <a href={mailto()} className="contact-email mt-3 inline-block">
+          <a href={mailto()} className="contact-email mt-1 inline-block py-2">
             {site.email}
           </a>
           <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
-            <a href={mailto()} className="btn btn-primary" data-glow>
+            <a href={mailto()} className="btn btn-primary" data-glow data-magnetic>
               <Mail />
               Envoyer un email
             </a>
-            <a href={mailto(site.emailSubject, projectBody)} className="btn btn-glass glass" data-glow>
+            <a href={mailto(site.emailSubject, projectBody)} className="btn btn-glass glass" data-glow data-magnetic>
               Discuter de mon projet
             </a>
-            <button type="button" onClick={copy} className="btn btn-glass glass" data-glow>
+            <button type="button" onClick={copy} className="btn btn-glass glass" data-glow data-magnetic>
               <Copy />
               {copied === "ok" ? "Adresse copiée" : copied === "error" ? "Copie impossible" : "Copier l'adresse"}
             </button>

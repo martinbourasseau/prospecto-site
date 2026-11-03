@@ -16,7 +16,8 @@ function hardwareWebGL() {
     const ext = gl.getExtension("WEBGL_debug_renderer_info");
     const renderer = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : "";
     gl.getExtension("WEBGL_lose_context")?.loseContext();
-    if (new URLSearchParams(location.search).has("force3d")) return true;
+    const q = new URLSearchParams(location.search);
+    if (q.has("force3d") || q.has("debug3d")) return true;
     return !/swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer);
   } catch {
     return false;
@@ -26,11 +27,11 @@ function hardwareWebGL() {
 function HeroActions() {
   return (
     <>
-      <a href="#prospecto" className="btn btn-primary" data-glow>
+      <a href="#prospecto" className="btn btn-primary" data-glow data-magnetic>
         Découvrir Prospecto
         <Arrow />
       </a>
-      <a href="#contact" className="btn btn-glass glass" data-glow>
+      <a href="#contact" className="btn btn-glass glass" data-glow data-magnetic>
         Développer mon activité avec l&apos;IA
       </a>
     </>
@@ -129,14 +130,22 @@ export default function Hero() {
               Prospecto
             </p>
             <p className="lede intro !text-[var(--silver)]" style={{ ["--d" as string]: "0.85s" }}>
-              Prospecto utilise l&apos;intelligence artificielle pour rechercher des entreprises, identifier des
-              opportunités commerciales, qualifier les prospects et préparer des prises de contact personnalisées.
+              Un agent IA qui <strong className="kw">recherche</strong> des entreprises,{" "}
+              <strong className="kw">qualifie</strong> les prospects et <strong className="kw">prépare</strong> des
+              prises de contact personnalisées.
             </p>
             <div className="intro mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap md:hidden" style={{ ["--d" as string]: "1s" }}>
               <HeroActions />
             </div>
           </div>
         </div>
+        {mode === "webgl" && (
+          <p className="hero-hint intro mt-8 self-center" style={{ ["--d" as string]: "3.2s" }} aria-hidden="true">
+            <i />
+            <span className="hidden [@media(pointer:fine)]:inline">Cliquez sur l&apos;eau</span>
+            <span className="[@media(pointer:fine)]:hidden">Touchez l&apos;eau</span>
+          </p>
+        )}
       </div>
     </section>
   );

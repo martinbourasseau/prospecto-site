@@ -11,11 +11,11 @@ const web = [
 
 const ai = [
   "Agents IA personnalisés",
-  "Automatisation de tâches professionnelles",
-  "Automatisation de processus commerciaux",
+  "Automatisation de tâches",
+  "Processus commerciaux",
   "Assistants intelligents",
-  "Connexion entre vos outils",
-  "Automatisations avec API et workflows",
+  "Connexion entre outils",
+  "API et workflows",
 ];
 
 function WebVisual() {
@@ -90,16 +90,13 @@ function Panel({
   id, title, intro, items, visual,
 }: { id: string; title: string; intro: string; items: string[]; visual: React.ReactNode }) {
   return (
-    <article className="glass flex flex-col rounded-[var(--radius-xl)] p-6 sm:p-9" data-reveal data-glow aria-labelledby={id}>
-      {visual}
+    <article className="glass flex flex-col rounded-[var(--radius-xl)] p-6 sm:p-9" data-reveal data-glow data-tilt="4" aria-labelledby={id}>
+      <div className="depth-2">{visual}</div>
       <h3 id={id} className="h3 mt-6 !text-[clamp(1.6rem,2.6vw,2.2rem)]">{title}</h3>
       <p className="mt-4 text-[var(--text-dim)]">{intro}</p>
-      <ul className="mt-6 grid gap-x-6 gap-y-2.5 text-[0.95rem] sm:grid-cols-2">
+      <ul className="mt-6 flex flex-wrap gap-2">
         {items.map((i) => (
-          <li key={i} className="flex gap-3 text-[var(--text)]">
-            <span className="mt-[0.6em] h-px w-3 flex-none bg-[var(--glacier)]" aria-hidden="true" />
-            {i}
-          </li>
+          <li key={i} className="chip">{i}</li>
         ))}
       </ul>
     </article>
@@ -114,8 +111,7 @@ export default function Solutions() {
           <p className="kicker mb-5" data-reveal>Sites web, agents IA, automatisation</p>
           <h2 id="solutions-title" className="h2" data-reveal>Les solutions que nous pouvons créer</h2>
           <p className="lede mt-7" data-reveal="0.1">
-            Prospecto montre ce qu&apos;un agent bien conçu peut apporter. Nous créons aussi des solutions sur mesure
-            pour les entreprises : chaque projet part de vos besoins, de vos outils existants et de vos objectifs.
+            Sur mesure, à partir de <span className="text-[var(--light)]">vos besoins, vos outils et vos objectifs</span>.
           </p>
         </div>
 
@@ -123,25 +119,24 @@ export default function Solutions() {
           <Panel
             id="sol-web"
             title="Création de sites web"
-            intro="Un site internet professionnel, rapide et bien référencé, qui présente clairement votre activité et transforme les visites en demandes. Création d'un nouveau site ou refonte d'un site web existant."
+            intro="Création de site internet professionnel ou refonte de site web : rapide, bien référencé, pensé pour convertir."
             items={web}
             visual={<WebVisual />}
           />
           <Panel
             id="sol-ia"
             title="Création d'agents IA"
-            intro="Des agents IA développés sur mesure pour automatiser les tâches professionnelles qui vous prennent du temps, et relier les outils que vous utilisez déjà."
+            intro="Développement d'agents IA sur mesure et automatisation des tâches professionnelles, connectés à vos outils."
             items={ai}
             visual={<AgentVisual />}
           />
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-6 border-t border-[var(--line)] pt-10 sm:flex-row sm:items-center" data-reveal>
-          <p className="max-w-[56ch] text-[var(--text-dim)]">
-            Un projet ne ressemble à aucun autre : nous définissons ensemble le périmètre, les priorités et la
-            façon de mesurer le résultat avant d&apos;écrire la première ligne de code.
+          <p className="max-w-[56ch] text-[1.15rem] text-[var(--light)]" style={{ fontVariationSettings: '"wdth" 108' }}>
+            Un projet, un périmètre clair, un résultat mesurable.
           </p>
-          <a href="#contact" className="btn btn-primary" data-glow>
+          <a href="#contact" className="btn btn-primary" data-glow data-magnetic>
             Parler de mon projet
             <Arrow />
           </a>
